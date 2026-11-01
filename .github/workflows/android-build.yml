@@ -1,1 +1,67 @@
-# Placeholder: workflow de compilacion APK para Android.
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar sintaxis de la web
+        run: bash tools/check-web.sh
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # No hace falta gradle-wrapper.jar en el repo: se instala Gradle 8.9 aquí.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      # Firma estable (opcional). Sin secretos se compila un APK debug instalable.
+      - name: Preparar keystore
+        id: ks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/filmframe.jks"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compilar APK firmado (release)
+        if: steps.ks.outputs.signed == 'true'
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/filmframe.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: gradle --no-daemon assembleRelease
+
+      - name: Compilar APK debug
+        if: steps.ks.outputs.signed != 'true'
+        run: gradle --no-daemon assembleDebug
+
+      - name: Renombrar APK
+        run: |
+          VER=$(grep '^ff.versionName=' gradle.properties | cut -d= -f2)
+          mkdir -p dist
+          APK=$(find app/build/outputs/apk -name '*.apk' | head -n 1)
+          cp "$APK" "dist/Filmframe-${VER}.apk"
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Filmframe-APK
+          path: dist/*.apk
+          if-no-files-found: error
