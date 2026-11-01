@@ -1,1 +1,5 @@
-<resources><string name="app_name">FILMFRAME</string></resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Filmframe 2D</string>
+    <string name="back_again">Pulsa atrás otra vez para salir</string>
+</resources>
