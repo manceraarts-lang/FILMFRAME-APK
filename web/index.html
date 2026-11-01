@@ -1,1 +1,93 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><title>FILMFRAME</title></head><body></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Filmframe 2D Animation · 1.1.18</title>
+<meta name="application-name" content="Filmframe 2D Animation">
+<meta name="version" content="1.1.18">
+<link rel="stylesheet" href="css/styles.css">
+<meta name="filmframe-release-notes" content="1.1.18: refactor interno de arquitectura y documentación de módulos, con orden de dependencias explícito; sin cambios intencionales de comportamiento ni de almacenamiento. Base 1.1.17 UI Refactor.">
+</head>
+<body>
+<div id="stage"><canvas id="view"></canvas></div>
+<nav id="rail" aria-label="Herramientas"></nav>
+<div class="fly" id="fly"></div>
+<div id="tl">
+<div id="tlh" role="button" aria-label="Mostrar u ocultar la línea de tiempo"><i></i></div>
+<div id="tlin"><div id="tlzoom" aria-label="Zoom de la línea de tiempo"><span>Zoom</span><button type="button" class="pill sm" id="tlzout" aria-label="Alejar la línea de tiempo" title="Alejar">−</button><input id="tlz" type="range" min="32" max="76" step="2" value="44" aria-label="Nivel de zoom de la línea de tiempo"><button type="button" class="pill sm" id="tlzin" aria-label="Acercar la línea de tiempo" title="Acercar">+</button><output id="tlzv">100%</output></div><div id="strip"></div><div id="tools" aria-label="Acciones contextuales de cuadro y capa">
+<button class="pill sm primary-action" id="dup" title="Duplicar cuadro o rango">Duplicar</button><button class="pill sm" id="hp" title="Aumentar duración del cuadro">Hold +</button><button class="pill sm" id="hm" title="Reducir duración del cuadro">Hold −</button><button class="pill sm" id="rg" title="Seleccionar un rango de cuadros">Rango</button><button class="pill sm danger-action" id="del" title="Borrar cuadro o rango">Borrar</button>
+<span class="tool-divider" aria-hidden="true"></span>
+<button class="pill sm layer-action" id="la" title="Crear capa">+ Capa</button><button class="pill sm layer-action" id="lc" title="Duplicar capa">Duplicar capa</button><button class="pill sm layer-action" id="ln" title="Cambiar nombre de capa">Nombre</button><button class="pill sm layer-action icon-action" id="lu" aria-label="Subir capa" title="Subir capa">▲</button><button class="pill sm layer-action icon-action" id="ld" aria-label="Bajar capa" title="Bajar capa">▼</button><button class="pill sm layer-action" id="lm" title="Fusionar con la capa inferior">Fusionar ↓</button><button class="pill sm layer-action danger-action" id="lx" title="Borrar capa">Borrar capa</button><button id="tla" class="pill sm layer-action" aria-label="Mostrar opciones avanzadas de capa" aria-expanded="false" title="Más opciones de capa">Más opciones ▾</button>
+</div>
+<aside id="ldrawer" aria-label="Opciones avanzadas de capa">
+<div class="dh"><b id="dtn">Capa</b><button class="pill sm" id="dx" aria-label="Cerrar">✕</button></div>
+
+<h4>Mezcla</h4><select id="lb" aria-label="Modo de mezcla"><option value="n">Normal</option><option value="m">Multiplicar</option><option value="s">Pantalla</option><option value="o">Superponer</option><option value="dk">Oscurecer</option><option value="lt">Aclarar</option><option value="cd">Sobreexponer</option><option value="cb">Subexponer</option><option value="sl">Luz suave</option><option value="hl">Luz fuerte</option><option value="df">Diferencia</option><option value="ad">Añadir</option><option value="co">Color</option></select>
+<label class="f"><span>Opacidad: <b id="vo"></b></span><input type="range" id="lo" min="0" max="100" aria-label="Opacidad de capa"></label>
+<label class="f"><span>Brillo: <b id="vbr">100</b></span><input type="range" id="lbr" min="0" max="200" value="100" aria-label="Brillo de capa"></label>
+<h4>Efectos</h4><div class="dg"><button class="pill sm" id="mk1">Máscara</button><button class="pill sm" id="mk2">✕ Másc.</button><button class="pill sm" id="al1">α Lock</button><button class="pill sm" id="cl1">Recorte</button><button class="pill sm" id="gr1">Grupo</button><button class="pill sm" id="rf" title="Capa de referencia: no se exporta">Ref</button></div>
+<h4>Medios</h4><div class="dg"><button class="pill sm" id="au">+ Audio</button><button class="pill sm" id="rt">🎞 Video</button><button class="pill sm" id="im1">🖼 Imagen</button><button class="pill sm" id="rc1">Referencia</button><button class="pill sm" id="rv">👁 Refs</button></div>
+<input type="file" id="vf" accept="video/*" hidden><input type="file" id="if" accept="image/*" multiple hidden><input type="file" id="rcf" accept="image/*" hidden><input type="file" id="af" accept="audio/*" hidden>
+<h4>Cuadros y caché</h4><label class="row">Hold en todas las capas<input type="checkbox" id="hg"></label><div class="dg"><button class="pill sm" id="pcb">Precalcular</button></div><div id="mb" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+</aside></div></div>
+<div id="bar">
+  <button class="pill" id="prev" aria-label="Cuadro anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+  <span id="cnt"></span>
+  <button class="pill" id="next" aria-label="Cuadro siguiente"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+  <button class="pill" id="add" aria-label="Nuevo cuadro"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="pill" id="prj" aria-label="Proyectos">📁</button><button class="pill" id="exp" aria-label="Exportar">⤓</button><button class="pill" id="zl" aria-label="Restablecer zoom">100%</button><button class="pill" id="play" aria-label="Reproducir"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8Z"/></svg></button>
+</div>
+<div id="ov"><div class="sheet" id="sheet"></div></div>
+
+<!--
+FILMFRAME 1.1.18 — MAPA DE ARQUITECTURA
+Base: 1.1.17 UI Refactor. Esta copia está dividida: index.html + css/styles.css + js/NN-*.js (mismo orden y
+mismo ámbito léxico clásico). tools/bundle-single-html.py regenera el HTML autónomo.
+
+Módulos (orden de ejecución obligatorio; comparten el ámbito léxico clásico):
+  00 app-shell       Estado global, persistencia de preferencias, canvas, entrada,
+                     navegación, pinceles base, gestos y configuración.
+  01 animation-core Fotogramas/celdas, capas, composición, timeline, historial,
+                     persistencia de celdas y exportación GIF/PNG.
+  02 tools-projects Herramientas de selección/relleno, proyectos, audio base y
+                     operaciones de importación/exportación de proyectos.
+  03 playback-cache Reproducción, caché de previsualización, cola de render y
+                     coordinación de rendimiento.
+  04 audio-video    Motor de audio, mezcla, captura de vídeo y rotoscopia.
+  05 drawing-advanced Motor de trazos, presión, estabilización, color, selección
+                     avanzada y transformación.
+  06 advanced-tools Historial ampliado, guías, texto, formatos PSD/TIFF, timeline
+                     avanzado y administración de memoria.
+  07 timeline-dock  Presentación y controles del dock de timeline.
+  08 updater        Consulta y presentación de actualizaciones.
+  09 timeline-zoom  Zoom horizontal de timeline.
+
+Contrato de integración:
+  - Los scripts 00–06 comparten variables y funciones globales léxicas; no envolverlos
+    individualmente en IIFE ni convertirlos a módulos ES sin migrar sus dependencias.
+  - 07–09 mantienen su aislamiento local y usan únicamente los puentes globales
+    explícitos que ya existían.
+  - STORE y los nombres de IndexedDB/localStorage son identificadores persistentes:
+    no renombrar ni cambiar esquemas sin migración versionada.
+  - Mantener el orden de scripts y los IDs del DOM: existen enlaces por selector,
+    atributos data-* y asignaciones de eventos distribuidas entre módulos.
+
+Alcance 1.1.18: formalización de límites, nombres y dependencias; actualización de
+metadatos. No se reescriben algoritmos ni se altera el contrato de datos. La separación
+física en archivos ES modules queda aplazada hasta disponer de pruebas de regresión.
+-->
+<script src="js/00-app-shell.js" data-ff-module="app-shell" data-ff-order="00"></script>
+<script src="js/01-animation-core.js" data-ff-module="animation-core" data-ff-order="01"></script>
+<script src="js/02-tools-projects.js" data-ff-module="tools-projects" data-ff-order="02"></script>
+<script src="js/03-playback-cache.js" data-ff-module="playback-cache" data-ff-order="03"></script>
+<script src="js/04-audio-video.js" data-ff-module="audio-video" data-ff-order="04"></script>
+<script src="js/05-drawing-advanced.js" data-ff-module="drawing-advanced" data-ff-order="05"></script>
+<script src="js/06-advanced-tools.js" data-ff-module="advanced-tools" data-ff-order="06"></script>
+<script src="js/07-timeline-dock.js" data-ff-module="timeline-dock" data-ff-order="07"></script>
+<script src="js/08-updater.js" data-ff-module="updater" data-ff-order="08"></script>
+
+<script src="js/09-timeline-zoom.js" data-ff-module="timeline-zoom" data-ff-order="09"></script>
+<script src="js/10-android-bridge.js" data-ff-module="android-bridge" data-ff-order="10"></script>
+</body>
+</html>
