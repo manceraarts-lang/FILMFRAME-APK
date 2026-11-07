@@ -20,7 +20,7 @@
 - 📱 Optimizado para tablet + lápiz (rechazo de palma)
 
 ## 🚀 Uso
-Abre `FILMFRAME_1_1_21_DESCARGA.html` en cualquier navegador moderno. Nada más.
+Abre `FILMFRAME_V1.1.18.html` en cualquier navegador moderno. Nada más.
 
 ## ⌨️ Atajos
 | Tecla | Acción |
